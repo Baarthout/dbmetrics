@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRM Data Platform – Relationships &amp; Flows</title>
+    <link rel="stylesheet" href="./assets/styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <div class="brand">
+          <h1>CRM Data Platform</h1>
+          <span>Entity relationships</span>
+        </div>
+        <nav aria-label="Primary navigation">
+          <ul>
+            <li><a href="index.html">Overview</a></li>
+            <li><a href="entities.html">Tables &amp; Columns</a></li>
+            <li><a href="relationships.html" aria-current="page">Relationships</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <section>
+        <span class="tag">erd</span>
+        <h2>Conceptual relationship map</h2>
+        <p>
+          The CRM schema follows a hub-and-spoke model. Accounts operate as the hub
+          while sales, marketing, and support activities are spokes that reference
+          the account surrogate key. This approach ensures downstream reporting can
+          stitch every interaction back to the company level.
+        </p>
+        <div class="grid">
+          <article class="card">
+            <h3>Account-centric hub</h3>
+            <ul>
+              <li>One <strong>account</strong> to many <strong>contacts</strong>.</li>
+              <li>One <strong>account</strong> to many <strong>opportunities</strong>.</li>
+              <li>One <strong>account</strong> to many <strong>support_cases</strong>.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Opportunity pipeline</h3>
+            <ul>
+              <li>Each <strong>opportunity</strong> belongs to one <strong>account</strong>.</li>
+              <li>Each <strong>order_header</strong> is optionally linked to an opportunity.</li>
+              <li><strong>order_lines</strong> require an <strong>order_header</strong> and <strong>product</strong>.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Engagement telemetry</h3>
+            <ul>
+              <li><strong>activities</strong> optionally reference an account and contact.</li>
+              <li>Every <strong>activity_outcome</strong> references exactly one activity.</li>
+              <li>Marketing <strong>campaign_responses</strong> join via contact_id.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Customer health</h3>
+            <ul>
+              <li><strong>health_snapshots</strong> provide periodic scores per account.</li>
+              <li><strong>success_plans</strong> link accounts to key playbooks.</li>
+              <li><strong>support_cases</strong> feed health scoring inputs.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+      <section>
+        <span class="tag">join guide</span>
+        <h2>Common join paths</h2>
+        <p>
+          Use the following patterns to build analytics models and operational
+          reports. All joins are inner unless noted.
+        </p>
+        <div class="table-wrapper" role="region" aria-label="Join guide">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Use case</th>
+                <th scope="col">Primary tables</th>
+                <th scope="col">Join logic</th>
+                <th scope="col">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Pipeline velocity</td>
+                <td>opportunities → stages</td>
+                <td>opportunities.stage = stages.name AND stages.stage_type = 'opportunity'</td>
+                <td>Filter opportunities by created_at date for cohorts.</td>
+              </tr>
+              <tr>
+                <td>Bookings attribution</td>
+                <td>order_headers → opportunities → accounts</td>
+                <td>order_headers.opportunity_id = opportunities.opportunity_id → accounts.account_id</td>
+                <td>Use left join from order_headers to opportunities for legacy deals.</td>
+              </tr>
+              <tr>
+                <td>Contact engagement</td>
+                <td>activities → contacts → accounts</td>
+                <td>activities.contact_id = contacts.contact_id → contacts.account_id</td>
+                <td>Activities without contacts roll up through account_id only.</td>
+              </tr>
+              <tr>
+                <td>Support responsiveness</td>
+                <td>support_cases → users</td>
+                <td>support_cases.owner_user_id = users.user_id</td>
+                <td>Join to stages for additional SLA grouping.</td>
+              </tr>
+              <tr>
+                <td>Customer health trend</td>
+                <td>health_snapshots → accounts → support_cases</td>
+                <td>health_snapshots.account_id = accounts.account_id → support_cases.account_id</td>
+                <td>Aggregate support cases by opened_at week.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <span class="tag">sql example</span>
+        <h2>Sample modeling query</h2>
+        <p>
+          The query below demonstrates how analytics engineers can build a fact table
+          representing the opportunity funnel with associated account metadata.
+        </p>
+        <article class="card">
+          <h3>Opportunity fact view</h3>
+          <pre><code>WITH base AS (
+  SELECT
+    o.opportunity_id,
+    o.account_id,
+    o.stage,
+    s.order_rank AS stage_order,
+    o.amount,
+    o.close_date,
+    a.industry,
+    a.lifecycle_stage,
+    a.annual_revenue
+  FROM crm.opportunities AS o
+  JOIN crm.accounts AS a ON a.account_id = o.account_id
+  JOIN crm.stages AS s
+    ON s.name = o.stage
+   AND s.stage_type = 'opportunity'
+)
+SELECT
+  base.account_id,
+  a.name AS account_name,
+  base.opportunity_id,
+  base.stage,
+  base.stage_order,
+  base.amount,
+  base.close_date,
+  base.industry,
+  base.lifecycle_stage,
+  base.annual_revenue,
+  SUM(base.amount) OVER (PARTITION BY base.stage) AS stage_total_amount
+FROM base
+JOIN crm.accounts AS a ON a.account_id = base.account_id;
+</code></pre>
+          <p>
+            Materialize the result as a view in the analytics warehouse to feed BI
+            dashboards. Partitioning the window function by stage yields the total
+            pipeline amount per stage without additional aggregation steps.
+          </p>
+        </article>
+      </section>
+    </main>
+    <footer>
+      <div class="container">
+        <section>
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="index.html">Overview</a></li>
+            <li><a href="entities.html">Tables &amp; columns</a></li>
+          </ul>
+        </section>
+        <section>
+          <h4>Architecture artifacts</h4>
+          <ul>
+            <li>Logical ERD – updated quarterly</li>
+            <li>Dimensional models – maintained in dbt</li>
+            <li>Reverse ETL syncs – orchestrated via Airflow</li>
+          </ul>
+        </section>
+        <section>
+          <h4>Feedback loop</h4>
+          <ul>
+            <li>Submit GitHub issues for schema proposals.</li>
+            <li>Join the #crm-data Slack channel.</li>
+            <li>Attend the fortnightly data design review.</li>
+          </ul>
+        </section>
+      </div>
+    </footer>
+  </body>
+</html>
