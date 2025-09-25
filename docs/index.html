@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRM Data Platform – Schema Overview</title>
+    <link rel="stylesheet" href="./assets/styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <div class="brand">
+          <h1>CRM Data Platform</h1>
+          <span>Database schema companion</span>
+        </div>
+        <nav aria-label="Primary navigation">
+          <ul>
+            <li><a href="index.html" aria-current="page">Overview</a></li>
+            <li><a href="entities.html">Tables &amp; Columns</a></li>
+            <li><a href="relationships.html">Relationships</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <section>
+        <span class="tag">start here</span>
+        <h2>How the CRM schema is organized</h2>
+        <p>
+          The CRM platform is centered around customer data, revenue activities, and
+          post-sale support. The relational database is organized into themed
+          domains so that operational teams can work from a single source of truth
+          while analytics teams can model trustworthy metrics.
+        </p>
+        <div class="summary-grid" role="list">
+          <article class="summary-card" role="listitem">
+            <strong>8 Core tables</strong>
+            <span>Accounts, contacts, opportunities, and more.</span>
+          </article>
+          <article class="summary-card" role="listitem">
+            <strong>3 Supporting dimensions</strong>
+            <span>Stages, product catalog, and success plans.</span>
+          </article>
+          <article class="summary-card" role="listitem">
+            <strong>4 Activity logs</strong>
+            <span>Tasks, meetings, emails, and support interactions.</span>
+          </article>
+        </div>
+      </section>
+      <section>
+        <h2>Domain blueprint</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Customer Management</h3>
+            <p>
+              Account, contact, and address tables capture the people and
+              organizations your teams work with. These tables provide the
+              foundation for all downstream relationships.
+            </p>
+            <ul>
+              <li><strong>accounts</strong> – legal entity or company.</li>
+              <li><strong>contacts</strong> – individual people tied to accounts.</li>
+              <li><strong>account_addresses</strong> – shipping, billing, and HQ.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Revenue Lifecycle</h3>
+            <p>
+              Opportunities, quotes, and orders document pipeline health and
+              conversion. These tables fuel dashboards for ARR, pipeline velocity,
+              and sales productivity.
+            </p>
+            <ul>
+              <li><strong>opportunities</strong> – sales-qualified deals.</li>
+              <li><strong>order_headers</strong> &amp; <strong>order_lines</strong> – contract bookings and products.</li>
+              <li><strong>forecasts</strong> – weekly rollups used by leadership.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Engagement Tracking</h3>
+            <p>
+              Meetings, calls, tasks, and emails provide the interaction history
+              that helps teams prioritize outreach and measure engagement quality.
+            </p>
+            <ul>
+              <li><strong>activities</strong> – unified log of tasks and meetings.</li>
+              <li><strong>activity_outcomes</strong> – normalized results &amp; notes.</li>
+              <li><strong>campaign_responses</strong> – marketing-sourced touches.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Customer Success</h3>
+            <p>
+              Support tickets and health scores spotlight churn risk and enable
+              proactive interventions throughout the customer lifecycle.
+            </p>
+            <ul>
+              <li><strong>support_cases</strong> – inbound issues and requests.</li>
+              <li><strong>success_plans</strong> – onboarding and adoption tasks.</li>
+              <li><strong>health_snapshots</strong> – time-series health scoring.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+      <section>
+        <h2>Deliverables for engineers &amp; analysts</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Integration engineers</h3>
+            <ul>
+              <li>Follow the entity specs in the <em>Tables &amp; Columns</em> section.</li>
+              <li>Maintain referential integrity keys when ingesting data.</li>
+              <li>Emit CDC events using the primary keys shown per table.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Analytics engineers</h3>
+            <ul>
+              <li>Model fact tables around opportunities and support cases.</li>
+              <li>Use the surrogate keys provided in the dimensional tables.</li>
+              <li>Apply slowly changing dimension strategy for account records.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Business stakeholders</h3>
+            <ul>
+              <li>Understand how lifecycle stages map to revenue reporting.</li>
+              <li>Leverage the relationship diagrams to plan new insights.</li>
+              <li>Track glossary definitions before introducing new fields.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <div class="container">
+        <section>
+          <h4>Schema References</h4>
+          <ul>
+            <li><a href="entities.html">Entity specifications</a></li>
+            <li><a href="relationships.html">Relationship diagrams</a></li>
+            <li><a href="https://schema.org/" target="_blank" rel="noopener">Schema design patterns</a></li>
+          </ul>
+        </section>
+        <section>
+          <h4>Release cadence</h4>
+          <ul>
+            <li>Monthly schema reviews</li>
+            <li>Quarterly dimensional refresh</li>
+            <li>Annual compliance audit</li>
+          </ul>
+        </section>
+        <section>
+          <h4>Contact</h4>
+          <ul>
+            <li>Data Engineering – data-team@example.com</li>
+            <li>Sales Operations – revops@example.com</li>
+            <li>Customer Success Ops – cs-ops@example.com</li>
+          </ul>
+        </section>
+      </div>
+    </footer>
+  </body>
+</html>
